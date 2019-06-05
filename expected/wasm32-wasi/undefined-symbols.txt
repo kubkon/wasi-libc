@@ -68,3 +68,4 @@ __wasi_sock_send
 __wasi_sock_shutdown
 __wasm_call_ctors
 main
+reactor_setup

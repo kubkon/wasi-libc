@@ -5,9 +5,14 @@
 
 extern char **__environ;
 extern void __wasm_call_ctors(void);
+void _Exit(int) __attribute__((noreturn));
+
+#ifdef REACTOR_RUNTIME
+extern void reactor_setup(int, char *[]);
+#else
 extern int main(int, char *[]);
 extern void __prepare_for_exit(void);
-void _Exit(int) __attribute__((noreturn));
+#endif
 
 static __wasi_errno_t populate_args(size_t *argc, char ***argv) {
     __wasi_errno_t err;
@@ -104,7 +109,11 @@ static __wasi_errno_t populate_libpreopen(void) {
     return __WASI_ESUCCESS;
 }
 
+#ifdef REACTOR_RUNTIME
+void __wasi_unstable_reactor_start(void) {
+#else
 void _start(void) {
+#endif
     /* Record the preopened resources. */
     if (populate_libpreopen() != __WASI_ESUCCESS) {
         _Exit(EX_OSERR);
@@ -125,6 +134,10 @@ void _start(void) {
     /* The linker synthesizes this to call constructors. */
     __wasm_call_ctors();
 
+#ifdef REACTOR_RUNTIME
+    /* Call reactor_setup with the arguments. */
+    reactor_setup(argc, argv);
+#else
     /* Call main with the arguments. */
     int r = main(argc, argv);
 
@@ -135,4 +148,5 @@ void _start(void) {
     if (r != 0) {
         _Exit(r);
     }
+#endif
 }

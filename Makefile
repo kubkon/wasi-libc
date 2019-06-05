@@ -33,7 +33,7 @@ endif
 # directories in the source tree.
 BASICS_DIR = $(CURDIR)/basics
 BASICS_INC = $(BASICS_DIR)/include
-BASICS_CRT_SOURCES = $(wildcard $(BASICS_DIR)/crt/*.c)
+BASICS_CRT1_SOURCE = $(BASICS_DIR)/crt/crt1.c
 BASICS_SOURCES = $(wildcard $(BASICS_DIR)/sources/*.c)
 DLMALLOC_DIR = $(CURDIR)/dlmalloc
 DLMALLOC_SRC_DIR = $(DLMALLOC_DIR)/src
@@ -54,7 +54,7 @@ LIBC_BOTTOM_HALF_ALL_SOURCES = \
     $(shell find $(LIBC_BOTTOM_HALF_SOURCES) -name \*.c)
 LIBWASI_EMULATED_MMAN_SOURCES = \
     $(shell find $(LIBC_BOTTOM_HALF_DIR)/mman -name \*.c)
-LIBC_BOTTOM_HALF_CRT_SOURCES = $(wildcard $(LIBC_BOTTOM_HALF_DIR)/crt/*.c)
+LIBC_BOTTOM_HALF_CRT1_SOURCE = $(LIBC_BOTTOM_HALF_DIR)/crt/crt1.c
 LIBC_TOP_HALF_DIR = $(CURDIR)/libc-top-half
 LIBC_TOP_HALF_MUSL_DIR = $(LIBC_TOP_HALF_DIR)/musl
 LIBC_TOP_HALF_MUSL_SRC_DIR = $(LIBC_TOP_HALF_MUSL_DIR)/src
@@ -407,9 +407,9 @@ ifeq ($(THREAD_MODEL), single)
 endif
 
 ifeq ($(BUILD_LIBC_BOTTOM_HALF),no)
-override CRT_SOURCES = $(BASICS_CRT_SOURCES)
+override CRT1_SOURCE = $(BASICS_CRT1_SOURCE)
 else
-override CRT_SOURCES = $(LIBC_BOTTOM_HALF_CRT_SOURCES)
+override CRT1_SOURCE = $(LIBC_BOTTOM_HALF_CRT1_SOURCE)
 endif
 
 startup_files: include_dirs
@@ -418,7 +418,8 @@ startup_files: include_dirs
 	#
 	@mkdir -p "$(OBJDIR)"
 	cd "$(OBJDIR)" && \
-	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT_SOURCES) -MD -MP && \
+	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP && \
+	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP -DREACTOR_RUNTIME -o reactor-crt1.o && \
 	mkdir -p "$(SYSROOT_LIB)" && \
 	mv *.o "$(SYSROOT_LIB)"
 
