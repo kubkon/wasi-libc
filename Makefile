@@ -416,12 +416,9 @@ startup_files: include_dirs
 	#
 	# Build the startup files.
 	#
-	@mkdir -p "$(OBJDIR)"
-	cd "$(OBJDIR)" && \
-	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP && \
-	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP -DREACTOR_RUNTIME -o reactor-crt1.o && \
-	mkdir -p "$(SYSROOT_LIB)" && \
-	mv *.o "$(SYSROOT_LIB)"
+	mkdir -p "$(SYSROOT_LIB)"
+	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP -o $(SYSROOT_LIB)/crt1.o
+	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP -DREACTOR_RUNTIME -o $(SYSROOT_LIB)/reactor-crt1.o
 
 libc: include_dirs \
     $(SYSROOT_LIB)/libc.a \
