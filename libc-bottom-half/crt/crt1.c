@@ -1,18 +1,9 @@
+#include "crt1.h"
 #include <stdlib.h>
 #include <sysexits.h>
 #include <wasi/core.h>
 #include <wasi/libc.h>
-
 extern char **__environ;
-extern void __wasm_call_ctors(void);
-void _Exit(int) __attribute__((noreturn));
-
-#ifdef REACTOR_RUNTIME
-extern void reactor_setup(int, char *[]);
-#else
-extern int main(int, char *[]);
-extern void __prepare_for_exit(void);
-#endif
 
 static __wasi_errno_t populate_args(size_t *argc, char ***argv) {
     __wasi_errno_t err;
@@ -131,22 +122,6 @@ void _start(void) {
         _Exit(EX_OSERR);
     }
 
-    /* The linker synthesizes this to call constructors. */
-    __wasm_call_ctors();
-
-#ifdef REACTOR_RUNTIME
-    /* Call reactor_setup with the arguments. */
-    reactor_setup(argc, argv);
-#else
-    /* Call main with the arguments. */
-    int r = main(argc, argv);
-
-    /* Call atexit functions, destructors, stdio cleanup, etc. */
-    __prepare_for_exit();
-
-    /* If main exited successfully, just return, otherwise call _Exit. */
-    if (r != 0) {
-        _Exit(r);
-    }
-#endif
+    /* Start the program! */
+    start_program(argc, argv);
 }

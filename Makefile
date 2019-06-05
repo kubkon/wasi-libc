@@ -32,7 +32,8 @@ endif
 # These variables describe the locations of various files and
 # directories in the source tree.
 BASICS_DIR = $(CURDIR)/basics
-BASICS_INC = $(BASICS_DIR)/include
+BASICS_HEADERS_PUBLIC = $(BASICS_DIR)/headers/public
+BASICS_HEADERS_PRIVATE = $(BASICS_DIR)/headers/private
 BASICS_CRT1_SOURCE = $(BASICS_DIR)/crt/crt1.c
 BASICS_SOURCES = $(wildcard $(BASICS_DIR)/sources/*.c)
 DLMALLOC_DIR = $(CURDIR)/dlmalloc
@@ -300,7 +301,7 @@ include_dirs:
 	# Install the include files.
 	#
 	mkdir -p "$(SYSROOT_INC)"
-	cp -r "$(BASICS_INC)" "$(SYSROOT)"
+	cp -r "$(BASICS_HEADERS_PUBLIC)"/* "$(SYSROOT_INC)"
 	cp -r "$(LIBC_BOTTOM_HALF_HEADERS_PUBLIC)"/* "$(SYSROOT_INC)"
 
 	# Generate musl's bits/alltypes.h header.
@@ -417,8 +418,10 @@ startup_files: include_dirs
 	# Build the startup files.
 	#
 	mkdir -p "$(SYSROOT_LIB)"
-	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP -o $(SYSROOT_LIB)/crt1.o
-	"$(WASM_CC)" $(WASM_CFLAGS) -c $(CRT1_SOURCE) -MD -MP -DREACTOR_RUNTIME -o $(SYSROOT_LIB)/reactor-crt1.o
+	"$(WASM_CC)" $(WASM_CFLAGS) -I$(BASICS_HEADERS_PRIVATE) -c \
+	    $(CRT1_SOURCE) -MD -MP -o $(SYSROOT_LIB)/crt1.o
+	"$(WASM_CC)" $(WASM_CFLAGS) -I$(BASICS_HEADERS_PRIVATE) -c \
+	    $(CRT1_SOURCE) -MD -MP -DREACTOR_RUNTIME -o $(SYSROOT_LIB)/reactor-crt1.o
 
 libc: include_dirs \
     $(SYSROOT_LIB)/libc.a \
